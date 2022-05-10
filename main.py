@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 from sys import platlibdir
 import pygame
 from random import randrange as rr
@@ -78,7 +79,7 @@ class Fold:
     def position(self, f):
         d1 = (f.endp.x-self.startp.x)*(self.endp.y-self.startp.y) - (f.endp.y-self.startp.y)*(self.endp.x-self.startp.x)
         d2 = (f.startp.x-self.startp.x)*(self.endp.y-self.startp.y) - (f.startp.y-self.startp.y)*(self.endp.x-self.startp.x)
-        return sign(round(d1, 5))+sign(round(d2, 5))
+        return sign(sign(round(d1, 5))+sign(round(d2, 5)))
 
     def __str__(self):
         return f"({self.startp}), ({self.endp})"
@@ -141,28 +142,27 @@ class Triangle:
                                         (x+i.startp_.x*scale, H-i.startp_.y*scale-y),
                                         (x+i.endp_.x*scale, H-i.endp_.y*scale-y))
                     else:
-                        print(ind_g)
                         pygame.draw.line(scr, ((ind_s==0)*20,(ind_s==1)*20,(ind_s==2)*20),
                                         (x+i.startp.x*scale, H-i.startp.y*scale-y),
                                         (x+i.endp.x*scale, H-i.endp.y*scale-y), 5)
 
-    def fold(self, ref):
+    def fold(self, ref, side):
         for ax in range(len(self.folds)):
             for ind in range(len(self.folds[ax])):
                 for fld in range(len(self.folds[ax][ind])):
                     p = ref.position(self.folds[ax][ind][fld])
-                    if p < 0:
+                    if p != side:
                         self.folds[ax][ind][fld] = self.folds[ax][ind][fld].mirror(ref)
                         self.folds[ax][ind][fld].startp.snap_to_grid()
                         self.folds[ax][ind][fld].endp.snap_to_grid()
                     if ind > 0:
-                        if p < 0:
+                        if p != side:
                             self.folds[ax][ind][fld].side = 1-self.folds[ax][ind][fld].side
                         if p == 0 and self.folds[ax][ind][fld].state == 0:
                             if self.folds[ax][ind][fld].side:
-                                self.folds[ax][ind][fld].state = 1
+                                self.folds[ax][ind][fld].state = -1 if side else 1
                             else:
-                                self.folds[ax][ind][fld].state = -1
+                                self.folds[ax][ind][fld].state = 1 if side else -1
         pass
     def shift(self):
         minx = 1000000000000000000
@@ -176,9 +176,7 @@ class Triangle:
                     maxx = max(maxx,max(k.startp.x, k.endp.x))
                     miny = min(miny,min(k.startp.y, k.endp.y))
                     maxy = max(maxy,max(k.startp.y, k.endp.y))
-        print(minx, miny, maxx, maxy)
         if minx < 0:
-            print(1)
             for ax in range(len(self.folds)):
                 for ind in range(len(self.folds[ax])):
                   for fld in range(len(self.folds[ax][ind])):
@@ -195,7 +193,6 @@ class Triangle:
                       self.folds[ax][ind][fld].startp.snap_to_grid()
                       self.folds[ax][ind][fld].endp.snap_to_grid()
         if miny < 0:
-            print(2, miny)
             for ax in range(len(self.folds)):
                 for ind in range(len(self.folds[ax])):
                   for fld in range(len(self.folds[ax][ind])):
@@ -222,14 +219,15 @@ class Triangle:
                     maxx = max(maxx,max(k.startp.x, k.endp.x))
                     miny = min(miny,min(k.startp.y, k.endp.y))
                     maxy = max(maxy,max(k.startp.y, k.endp.y))
-        print("new",minx, miny, maxx, maxy)
 
 def draw_arrow(scr, color, start, end, thickness):
     fi = -2*pi+atan((end[0]-start[0])/(end[1]-start[1])) if end[1]-start[1] != 0 else -pi/2
-    if end[0] < start[0] and end[1] > start[1]:
+    
+    if end[1] > start[1]:
         p = Point(0, thickness*4)
     else:
         p = Point(0, -thickness*4)
+        
     p = p.rotate(fi)
     p1 = p.rotate(pi/11)
     p2 = p.rotate(2*pi-pi/11)
@@ -250,7 +248,6 @@ def draw_circles(scr, tr, x_shift, y_shift, scale, color, radius):
             for k in j:
                 x = (k.startp.x+k.endp.x)/2*scale + x_shift
                 y = scr.get_height()-((k.startp.y+k.endp.y)/2)*scale-y_shift
-                print(x, y)
                 pygame.draw.circle(scr, color, (x, y), radius)
 
 def check_circle_click(scr, tr, x_shift, y_shift, scale, radius, mx, my):
@@ -260,7 +257,7 @@ def check_circle_click(scr, tr, x_shift, y_shift, scale, radius, mx, my):
                 x = (k.startp.x+k.endp.x)/2*scale + x_shift
                 y = scr.get_height()-((k.startp.y+k.endp.y)/2)*scale-y_shift
                 if (mx-x)**2+(my-y)**2 < radius**2:
-                    return k
+                    return k, x, y
     return None
 def main():
     tr = Triangle(4)
@@ -269,27 +266,58 @@ def main():
     x_shift = 20
     y_shift = 20
     scaling = 45
-    t = [(0,1),(1,1),(2,1)]
+    
     pygame.init()
     scr = pygame.display.set_mode((500,500))
     running = True
     
     scr.fill((200,200,200))
+    #Сам треугольник
     tr.draw(scr, (20,20,20), x_shift, y_shift, scaling, 3, 0)
+    #Миниатюра сгибов
     tr.draw(scr, (20,20,20), 20, scr.get_height()-100, 10, 3, 1)
     draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8)
     pygame.display.update()
     
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONUP:
+            #Обработка сворачиваний
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
-                c = check_circle_click(scr, tr, x_shift, y_shift, scaling, 8, x, y)
-                if c is not None:
-                    scr.fill((200,200,200))
-                    tr.fold(c)
+                cxy = check_circle_click(scr, tr, x_shift, y_shift, scaling, 8, x, y)
+                #Если пользователь нажал на круг
+                if cxy is not None:
+                    c, cx, cy = cxy
+                    dragging = True
+                    #Выбор стороны сворачивания
+                    while dragging:
+                        for event in pygame.event.get():
+                            if event.type == pygame.MOUSEBUTTONUP:
+                                dragging = False
+                        scr.fill((200,200,200))
+                        tr.draw(scr, (20,20,20), x_shift, y_shift, scaling, 3, 0)
+                        tr.draw(scr, (20,20,20), 20, scr.get_height()-100, 10, 3, 1)
+                        x, y = pygame.mouse.get_pos()
+                        draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8)
+                        draw_arrow(scr, (0,200,0), (cx, cy), (x, y), 5)
+                        pygame.display.update()
+                    #Преобразование координат позиции мыши
+                    x, y = pygame.mouse.get_pos()
+                    x -= x_shift
+                    x /= scaling
+                    y = scr.get_height()-y-y_shift
+                    y /= scaling
+
+                    #С какой стороны от прямой находится мышь
+                    v = Fold(Point(x,y), Point(x,y))
+                    p = c.position(v)
+
+                    tr.fold(c, p)
                     tr.shift()
+                    scr.fill((200,200,200))
+                    #Сам треугольник
                     tr.draw(scr, (20,20,20), x_shift, y_shift, scaling, 3, 0)
+                    #Миниатюра сгибов
                     tr.draw(scr, (20,20,20), 20, scr.get_height()-100, 10, 3, 1)
                     draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8)
                     pygame.display.update()
