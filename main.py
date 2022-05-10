@@ -151,18 +151,19 @@ class Triangle:
             for ind in range(len(self.folds[ax])):
                 for fld in range(len(self.folds[ax][ind])):
                     p = ref.position(self.folds[ax][ind][fld])
-                    if p != side:
+                    if -p == side:
                         self.folds[ax][ind][fld] = self.folds[ax][ind][fld].mirror(ref)
                         self.folds[ax][ind][fld].startp.snap_to_grid()
                         self.folds[ax][ind][fld].endp.snap_to_grid()
                     if ind > 0:
-                        if p != side:
+                        if -p == side:
                             self.folds[ax][ind][fld].side = 1-self.folds[ax][ind][fld].side
                         if p == 0 and self.folds[ax][ind][fld].state == 0:
                             if self.folds[ax][ind][fld].side:
-                                self.folds[ax][ind][fld].state = -1 if side else 1
+                                self.folds[ax][ind][fld].state = -1
                             else:
-                                self.folds[ax][ind][fld].state = 1 if side else -1
+                                self.folds[ax][ind][fld].state = 1
+                                
         pass
     def shift(self):
         minx = 1000000000000000000
@@ -208,17 +209,6 @@ class Triangle:
                       self.folds[ax][ind][fld].endp.y -= maxy-(self.n+1)*2*YSCALE
                       self.folds[ax][ind][fld].startp.snap_to_grid()
                       self.folds[ax][ind][fld].endp.snap_to_grid()
-        minx = 1000000000000000000
-        miny = 1000000000000000000
-        maxx = -1
-        maxy = -1
-        for i in self.folds:
-            for j in i:
-                for k in j:
-                    minx = min(minx,min(k.startp.x, k.endp.x))
-                    maxx = max(maxx,max(k.startp.x, k.endp.x))
-                    miny = min(miny,min(k.startp.y, k.endp.y))
-                    maxy = max(maxy,max(k.startp.y, k.endp.y))
 
 def draw_arrow(scr, color, start, end, thickness):
     fi = -2*pi+atan((end[0]-start[0])/(end[1]-start[1])) if end[1]-start[1] != 0 else -pi/2
