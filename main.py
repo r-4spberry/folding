@@ -1,9 +1,6 @@
 # -*- coding: cp1251 -*-
-from sys import platlibdir
 import pygame
-from random import randrange as rr
-from math import sin, cos, tan, atan, pi
-from time import sleep
+from math import sin, cos, atan, pi
 from random import shuffle
 YSCALE = (3**.5)/2
 
