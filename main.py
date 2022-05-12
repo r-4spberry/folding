@@ -220,10 +220,7 @@ def draw_arrow(scr, color, start, end, thickness):
     p2 = p.rotate(2*pi-pi/11)
     
     fi = pi/2-2*pi-fi
-    if end[0] < start[0] and end[1] > start[1]:
-        p = Point(+thickness, 0)
-    else:
-        p = Point(-thickness, 0)
+    p = Point(+thickness, 0)
     p3 = p.rotate(fi)
     pygame.draw.aaline(scr, color, start, (end[0]-p3.x, end[1]-p3.y))
     pygame.draw.polygon(scr, color, (end, (end[0]+p1.x, end[1]-p1.y), (end[0]+p2.x, end[1]-p2.y)))
@@ -253,7 +250,7 @@ def main():
     x_shift = 20
     y_shift = 20
     scaling = 45
-    
+    radius = 8
     pygame.init()
     scr = pygame.display.set_mode((500,500))
     running = True
@@ -263,7 +260,7 @@ def main():
     tr.draw(scr, (20,20,20), x_shift, y_shift, scaling, 3, 0)
     #Миниатюра сгибов
     tr.draw(scr, (20,20,20), 20, scr.get_height()-100, 10, 3, 1)
-    draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8)
+    draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), radius)
     pygame.display.update()
     
     while running:
@@ -271,7 +268,7 @@ def main():
             #Обработка сворачиваний
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
-                cxy = check_circle_click(scr, tr, x_shift, y_shift, scaling, 8, x, y)
+                cxy = check_circle_click(scr, tr, x_shift, y_shift, scaling, radius, x, y)
                 #Если пользователь нажал на круг
                 if cxy is not None:
                     c, cx, cy = cxy
@@ -285,7 +282,7 @@ def main():
                         tr.draw(scr, (20,20,20), x_shift, y_shift, scaling, 3, 0)
                         tr.draw(scr, (20,20,20), 20, scr.get_height()-100, 10, 3, 1)
                         x, y = pygame.mouse.get_pos()
-                        draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8)
+                        draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), radius)
                         draw_arrow(scr, (0,200,0), (cx, cy), (x, y), 5)
                         pygame.display.update()
                     #Преобразование координат позиции мыши
