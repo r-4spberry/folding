@@ -4,10 +4,12 @@ from asyncio.windows_events import CONNECT_PIPE_MAX_DELAY
 import pygame
 from random import randrange as rr
 from math import sin, cos, tan, atan, pi
+from time import sleep
+from random import shuffle
 from copy import deepcopy
 import itertools
+from anytree import AnyNode, RenderTree
 YSCALE = (3 ** .5) / 2
-
 
 def sign(x):
     return 1 if x > 0 else (-1 if x < 0 else 0)
@@ -383,7 +385,6 @@ def draw_circles(scr, tr, x_shift, y_shift, scale, color, radius, edge = False):
                 
 
 
-
 def check_circle_click(scr, tr, x_shift, y_shift, scale, radius, mx, my, edge = False):
     for i in tr.folds:
         if not edge:
@@ -396,9 +397,49 @@ def check_circle_click(scr, tr, x_shift, y_shift, scale, radius, mx, my, edge = 
                     return k, x, y
     return None
 
+class Button():
+    def __init__(self, color, x,y,width,height, text=''):
+        self.color = color
+        self.ogcol = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self,win,outline=None):
+        #Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x-2,self.y-2,self.width+4,self.height+4), 2, 3)
+            
+        pygame.draw.rect(win, self.color, (self.x,self.y,self.width,self.height), 2, 3)
+        
+        if self.text != '':
+            font = pygame.font.SysFont('Consolas', 24)
+            text = font.render(self.text, 1, (0,0,0))
+            win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
+
+    def isOver(self, pos, ev):
+        global STATE
+        #Pos is the mouse position or a tuple of (x,y) coordinates
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                self.color = (128,128,128)
+            else:
+                self.color = self.ogcol
+        else:
+            self.color = self.ogcol
+        for event in ev:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pos[0] > self.x and pos[0] < self.x + self.width:
+                    if pos[1] > self.y and pos[1] < self.y + self.height:
+                        return True
+
 def edit():
     n = 4
     tr = Triangle(n)
+    t = [(a, b) for a in range(3) for b in range(1, 5)]
+    shuffle(t)
     x_shift = 20
     y_shift = 20
     if n == 2:
@@ -410,17 +451,20 @@ def edit():
     pygame.init()
     scr = pygame.display.set_mode((500, 500))
     running = True
-
+    
+    button = Button((170, 170, 170), 500-140-10, 10, 140, 40, text="Завершить")
     scr.fill((200, 200, 200))
     # Сам треугольник
     tr.draw(scr, (20, 20, 20), x_shift, y_shift, scaling, 3, 1)
     # Миниатюра сгибов
     #tr.draw(scr, (20, 20, 20), 20, scr.get_height() - 100, 10, 3, 1)
     draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8, False)
+    button.draw(scr)
     pygame.display.update()
 
     while running:
-        for event in pygame.event.get():
+        events = pygame.event.get()
+        for event in events:
             # Обработка сворачиваний
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
@@ -468,12 +512,15 @@ def edit():
                     # Миниатюра сгибов
                     #tr.draw(scr, (20, 20, 20), 20, scr.get_height() - 100, 10, 3, 1)
                     draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8, False)
+                    button.draw(scr)
                     pygame.display.update()
                     # print("-----------------------------------------")
                     # print(tr.folds[0][-1][0],tr.folds[0][-1][0].startp_,tr.folds[0][-1][0].endp_)
                     # print(tr.folds[1][-1][0],tr.folds[1][-1][0].startp_,tr.folds[1][-1][0].endp_)
                     # print(tr.folds[2][-1][0],tr.folds[2][-1][0].startp_,tr.folds[2][-1][0].endp_)
                     # print("-----------------------------------------")
+            if button.isOver(pygame.mouse.get_pos(), events) == True:
+                running = False
             if event.type == pygame.QUIT:
                 running = False
     pygame.quit()
@@ -482,6 +529,8 @@ def edit():
 def main():
     n = 4
     tr = Triangle(n)
+    t = [(a, b) for a in range(3) for b in range(1, 5)]
+    shuffle(t)
     x_shift = 20
     y_shift = 20
     if n == 2:
