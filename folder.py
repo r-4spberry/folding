@@ -437,6 +437,7 @@ class Button():
 
 def edit():
     n = 4
+    FPS = 30
     tr = Triangle(n)
     t = [(a, b) for a in range(3) for b in range(1, 5)]
     shuffle(t)
@@ -461,8 +462,9 @@ def edit():
     draw_circles(scr, tr, x_shift, y_shift, scaling, (150, 0, 0), 8, False)
     button.draw(scr)
     pygame.display.update()
-
+    
     while running:
+        pygame.time.wait(1000//FPS)
         events = pygame.event.get()
         for event in events:
             # Обработка сворачиваний
@@ -528,6 +530,7 @@ def edit():
 
 def main():
     n = 4
+    FPS = 30
     tr = Triangle(n)
     t = [(a, b) for a in range(3) for b in range(1, 5)]
     shuffle(t)
@@ -552,6 +555,7 @@ def main():
     pygame.display.update()
 
     while running:
+        pygame.time.wait(1000//FPS)
         for event in pygame.event.get():
             # Обработка сворачиваний
             if event.type == pygame.MOUSEBUTTONDOWN:

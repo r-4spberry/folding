@@ -892,6 +892,7 @@ def recursive_ret(array):
 
 
 def main():
+    FPS = 30
     tr = folder.edit()
     array = []
     for axis in tr.folds:
@@ -992,6 +993,7 @@ def main():
     pygame.display.update()
     drawer = recursive_ret(array)
     while running:
+        pygame.time.wait(1000//FPS)
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
