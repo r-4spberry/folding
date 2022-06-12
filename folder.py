@@ -1,6 +1,5 @@
 # -*- coding: cp1251 -*-
 # from sys import platlibdir
-from asyncio.windows_events import CONNECT_PIPE_MAX_DELAY
 import pygame
 from random import randrange as rr
 from math import sin, cos, tan, atan, pi
@@ -8,7 +7,7 @@ from time import sleep
 from random import shuffle
 from copy import deepcopy
 import itertools
-from anytree import AnyNode, RenderTree
+from sys import exit
 YSCALE = (3 ** .5) / 2
 
 def sign(x):
@@ -525,6 +524,8 @@ def edit():
                 running = False
             if event.type == pygame.QUIT:
                 running = False
+                pygame.quit()
+                exit()
     pygame.quit()
     return tr
 
@@ -606,7 +607,8 @@ def main():
                     # print("-----------------------------------------")
             if event.type == pygame.QUIT:
                 running = False
-    pygame.quit()
+                pygame.quit()
+                exit()
     return tr
 
 if __name__ == "__main__":

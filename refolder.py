@@ -4,6 +4,7 @@ from folder import sign
 import math
 import copy
 import pygame
+from sys import exit
 
 counter = 0
 def angle_of_vector(node):
@@ -1019,7 +1020,8 @@ def main():
                     except StopIteration:
                         scr.fill((200, 200, 200))
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                exit()
     pygame.quit()
 
 
