@@ -10,25 +10,43 @@ import itertools
 from sys import exit
 YSCALE = (3 ** .5) / 2
 
+
 def sign(x):
+    '''
+    Return the sign of a number
+    '''
     return 1 if x > 0 else (-1 if x < 0 else 0)
 
 
 def dot(f1, f2):
+    '''
+    Return the dot product of two vectors f1 and f2
+    '''
     return f1.x * f2.x + f1.y * f2.y
 
 class Point():
+    '''
+    Point representation.
+    
+    x, y - coordinates of the point.
+    '''
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
     def rotate(self, fi):
+        '''
+        Rotate the point by the given angle fi relative to the origin.
+        '''
         x_ = self.x * cos(fi) - self.y * sin(fi)
         y_ = self.x * sin(fi) + self.y * cos(fi)
 
         return Point(x_, y_)
 
     def mirror(self, f):
+        '''
+        Mirror the point relative to the vector f
+        '''
         v = f.vec()
         a = f.endp.y - f.startp.y
         b = -(f.endp.x - f.startp.x)
@@ -51,14 +69,26 @@ class Point():
         return False
 
     def snap_to_grid(self):
+        '''
+        Spap point position to the grid
+        '''
         self.x = round(self.x)
         self.y = round(self.y / YSCALE) * YSCALE
 
 
 class Fold:
+    '''
+    Vector representation of a fold
+    
+    startp, endp - coordinates of start and end of a vector relative to the grid
+    id - unique number
+    neighbors - list of neighbors (vectors whose end or start points coincide with this vector points)
+    startp_, endp_ - coordinates of start and end of a vectov relative to the screen
+    state - is this vector was "folded" before
+    side - which side of this vector is looking up
+    '''
     id_iter = itertools.count()
     def __init__(self, startp, endp, id = None, neighbors=None, startp_=None, endp_=None, state=None, side=None):
-        
         self.startp = startp
         self.endp = endp
         if id is None:
@@ -87,13 +117,19 @@ class Fold:
             self.side = side
 
     def mirror(self, f):
+        '''
+        Mirror the vector relative to the another vector f
+        '''
         self.startp = self.startp.mirror(f)
         self.endp = self.endp.mirror(f)
 
-    def vec(self):  # position of fold's middle
+    def vec(self):
         return Point(self.endp.x - self.startp.x, self.endp.y - self.startp.y)
 
     def position(self, f):
+        '''
+        On which side is the vector f relative to this -1 or 1. 0 if the vectors are on the same line
+        '''
         d1 = (f.endp.x - self.startp.x) * (self.endp.y - self.startp.y) - (f.endp.y - self.startp.y) * (
                     self.endp.x - self.startp.x)
         d2 = (f.startp.x - self.startp.x) * (self.endp.y - self.startp.y) - (f.startp.y - self.startp.y) * (
@@ -105,6 +141,7 @@ class Fold:
     
     def __repr__(self):
         return f"Fold with id {self.id}"
+    
     def type(self):
         if round(self.startp.y-self.endp.y,5) == 0:
             t = 'A'
@@ -113,6 +150,7 @@ class Fold:
         else:
             t = 'C'
         return t
+    
     def __eq__(self, other):
         if self.endp == other.endp and self.startp == other.startp:
             return True
@@ -121,12 +159,20 @@ class Fold:
         return False
 
     def in_array(self, array):
+        '''
+        Return if vector whith the same id is in the array
+        '''
         for other in array:
             if self.id == other.id:
                 return True
         return False
 
 class Triangle:
+    '''
+    Representation of a triangle paper
+    
+    n - length of the triangle side in vectors (1, 2, 3...)
+    '''
     def __init__(self, n):
         # a = 0, b = 1, c = 2
         self.n = n
@@ -169,13 +215,17 @@ class Triangle:
                     self.folds[2][-1][-1].edge = True
                 else:
                     self.folds[2][-1][-1].edge = True
-    def draw(self, scr, icolor, x, y, scale, thickness, initial=False):
+                    
+    def draw(self, scr, icolor, x, y, scale, thickness, foldable=False):
+        '''
+        Draw all vectors on the scr.
+        '''
         W = scr.get_width()
         H = scr.get_width()
         for ind_s, s in enumerate(self.folds):
             for ind_g, g in enumerate(s):
                 for i in g:
-                    if initial:
+                    if foldable:
                         draw = 1
                         if ind_g != 0:
                             if i.state == -1:
@@ -202,6 +252,9 @@ class Triangle:
                                          (x + i.endp.x * scale, H - i.endp.y * scale - y), thickness)
 
     def fold(self, ref, side, mode = 1):
+        '''
+        Fold paper relative to the ref vector.
+        '''
         all = [c for a in self.folds for b in a for c in b]
         refs = [ref]
         connected = []
@@ -270,6 +323,9 @@ class Triangle:
         pass
 
     def shift(self):
+        '''
+        Shift coordinates if they out of bounds
+        '''
         minx = 1000000000000000000
         miny = 1000000000000000000
         maxx = -1
@@ -326,6 +382,9 @@ class Triangle:
                     maxy = max(maxy, max(k.startp.y, k.endp.y))
                     
     def define_neighbors(self):
+        '''
+        Set the neighbors of the vectors
+        '''
         all = [c for a in self.folds for b in a for c in b]
         for i in range(len(all)):
             for j in range(i+1, len(all)):
@@ -334,6 +393,9 @@ class Triangle:
                     all[j].neighbors.append(all[i])
                     
     def get(self, id):
+        '''
+        Return the vector by id
+        '''
         all = [c for a in self.folds for b in a for c in b]
         for fold in all:
             if fold.id == id:
@@ -344,6 +406,9 @@ class Triangle:
 
 
 def draw_arrow(scr, color, start, end, thickness):
+    '''
+    Draw the arrow with the given color, thickness and start and end points on a scr.
+    '''
     fi = -2 * pi + atan((end[0] - start[0]) / (end[1] - start[1])) if end[1] - start[1] != 0 else -pi / 2
 
     if end[1] > start[1]:
@@ -367,6 +432,9 @@ def draw_arrow(scr, color, start, end, thickness):
 
 
 def draw_circles(scr, tr, x_shift, y_shift, scale, color, radius, edge = False):
+    '''
+    Draw circles on a vectors with they ID's
+    '''
     for i in tr.folds:
         if not edge:
             i = i[1:]
@@ -385,6 +453,9 @@ def draw_circles(scr, tr, x_shift, y_shift, scale, color, radius, edge = False):
 
 
 def check_circle_click(scr, tr, x_shift, y_shift, scale, radius, mx, my, edge = False):
+    '''
+    Check if a circle is clicked
+    '''
     for i in tr.folds:
         if not edge:
             i = i[1:]
