@@ -654,6 +654,10 @@ class Graph:
         for p in self.points:
             if p not in right_points:
                 left_points.append(p)
+
+        if len(right_points) > len(left_points):
+            right_points, left_points = left_points,right_points
+
         for p in right_points:
             p.mirror(mirror_fold)
             p.switch_connection_state()
@@ -853,7 +857,7 @@ class Graph:
                     color = (255, 255, 255)
                 print(node.x*scaling + x_mid,WIDTH-node.y*scaling-HEIGHT + 500)
                 print(con_node.x*scaling + x_mid,WIDTH-con_node.y*scaling-HEIGHT + 500)
-                pygame.draw.line(scr,color,((node.x-x_mid)*scaling+300,WIDTH-(node.y-y_mid)*scaling-HEIGHT + 500),(300+(con_node.x-x_mid)*scaling,WIDTH-(con_node.y-y_mid)*scaling-HEIGHT + 500),5)
+                pygame.draw.line(scr,color,((node.x+x)*scaling+300,WIDTH-(node.y+y)*scaling-HEIGHT + 500),(300+(con_node.x+x)*scaling,WIDTH-(con_node.y+y)*scaling-HEIGHT + 500),5)
 
 
 # def recursive_fold(elem, array):
@@ -990,8 +994,16 @@ def main():
     running = True
 
     scr.fill((200, 200, 200))
+    button = folder.Button((170, 170, 170), 0, 10, 700, 40, text="Нажмите SPACE чтобы перейти на следующую итерацию.")
+    button.draw(scr)
     pygame.display.update()
     drawer = recursive_ret(array)
+    elem = drawer.__next__()
+    # print("TYPE: ",type(elem))
+    scr.fill((200, 200, 200))
+    button.draw(scr)
+    elem.draw(scr=scr, x=-4, y=0, scaling=40)
+    pygame.display.update()
     while running:
         pygame.time.wait(1000//FPS)
         for event in pygame.event.get():
@@ -1001,7 +1013,8 @@ def main():
                         elem = drawer.__next__()
                         # print("TYPE: ",type(elem))
                         scr.fill((200, 200, 200))
-                        elem.draw(scr=scr, x=100, y=100, scaling=40)
+                        button.draw(scr)
+                        elem.draw(scr=scr, x=-4, y=0, scaling=40)
                         pygame.display.update()
                     except StopIteration:
                         scr.fill((200, 200, 200))
